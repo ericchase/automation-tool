@@ -52,7 +52,11 @@ export class FileReader extends Reader {
 export function UseFileReader(filepath, callback) {
   try {
     const fileReader = new FileReader(filepath);
-    callback(fileReader);
+    try {
+      callback(fileReader);
+    } catch (err) {
+      console.log(err);
+    }
     fileReader.close();
   } catch (err) {
     return err;

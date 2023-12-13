@@ -1,0 +1,8 @@
+token boundaries
+- space, tab
+- square brackets
+- comma
+  - unless within string
+- double quote
+  - unless escaped
+- new line

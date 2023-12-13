@@ -1,3 +1,3 @@
-build "./folder"
-watch "./folder" ["*.js", "*.ts"]
--> copy "./folder" "./other folder"
+build "./my folder" "this shouldn't get parsed"
+watch ./folder *.js *.ts "this should be a string"
+=> copy ./folder "./other folder"

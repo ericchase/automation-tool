@@ -1,4 +1,5 @@
 import { FileReader, UseFileReader } from './external/node/FileReader.mjs';
+import { Parser } from './src/Parser.mjs';
 import { Tokenizer } from './src/Tokenizer.mjs';
 
 // come up with language
@@ -92,19 +93,19 @@ function ParseFile(fileReader) {
   // TODO: use the lexer instead of tokenizer
   console.log('Parsing', fileReader.filepath);
   console.log();
-  const tokenizer = new Tokenizer(fileReader);
-  let [tokens, buffer] = tokenizer.nextLine();
+  const parser = new Parser(fileReader);
+  var { tokens, buffer } = parser.nextCommand(); // deal with var later
   let line_count = 0;
   while (tokens.length > 0) {
     line_count += 1;
-    const texts = tokens.map((buffer) => decode(buffer));
-    const hbars = texts.map((text) => '═'.repeat(text.length));
+    const texts = tokens;
+    const hbars = texts.map((token) => '═'.repeat(token.length));
     console.log(`Line ${line_count}:`, decode(buffer));
     console.log('╔' + hbars.join('╦') + '╗');
     console.log('║' + texts.join('║') + '║');
     console.log('╚' + hbars.join('╩') + '╝');
     console.log();
-    [tokens, buffer] = tokenizer.nextLine();
+    var { tokens, buffer } = parser.nextCommand();
   }
 }
 

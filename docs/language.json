@@ -1,0 +1,19 @@
+[
+  {
+    "command": "build",
+    "argument1": "file path"
+  },
+  {
+    "command": "copy",
+    "argument1": "from file path",
+    "argument2": "to file path"
+  },
+  {
+    "command": "run",
+    "argument1": "file path"
+  },
+  {
+    "command": "watch",
+    "argument1": "file path"
+  }
+]
