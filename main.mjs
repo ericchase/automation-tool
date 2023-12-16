@@ -53,16 +53,29 @@ const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
 function ProcessCommand(command) {
   // Non-interactive Commands
   switch (command) {
-    case 'build': // searches for build.do files in the current folder, then process them
+    case 'build':
+      // build <subfolder>
+      // run build.do file in target subfolder
       return true;
     case 'copy':
-      // copy command
+      // copy from <file> to <folder>
+      // copy from <folder> to <folder>
+      // copy from <glob> to <folder>
+      // overwrites files
+      return true;
+    case 'do':
+      // do <*.do>
+      // processes target file as if ran with do directly
       return true;
     case 'run':
-      // run command
+      // run <executable>
+      // run <shell command>
       return true;
     case 'watch':
-      // watch command
+      // watch <file> <command>
+      // watch <folder> <command>
+      // watch <glob> <command>
+      // the command may be any interactive/some non-interactive command
       return true;
   }
   return false;
@@ -118,20 +131,28 @@ function ParseFile(fileReader) {
  */
 function ProcessInteractiveCommand(command) {
   switch (command) {
-    case 'help': // prints information about how to use do
+    case 'help':
+      // prints information about how to use do
       help();
       return true;
-    case 'version': // prints version of do
+    case 'version':
+      // prints version of do
       console.log('0.0.1');
       return true;
-    case 'parse': // parses a file and prints each resulting line of lexemes
+    case 'parse':
+      // parses a file and prints each resulting line of lexemes
       if (process.argv[3] !== undefined) {
         ProcessFilename(process.argv[3], ParseFile);
       } else {
         console.log('Please provide a filepath to parse.');
       }
       return true;
-    case 'validate': // validates every *.do file in the current directory and any *.do files might be called during execution
+    case 'validate':
+      // validates every *.do file in the current directory and any *.do files might be called during execution
+      return true;
+    case 'run':
+      // run <executable>
+      // run <shell command>
       return true;
   }
   return false;
