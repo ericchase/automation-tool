@@ -1,4 +1,5 @@
 import { FileReader, UseFileReader } from './external/node/FileReader.mjs';
+import { $if } from './lib/lib.mjs';
 import { Parser } from './src/Parser.mjs';
 import { Tokenizer } from './src/Tokenizer.mjs';
 
@@ -28,29 +29,41 @@ import { Tokenizer } from './src/Tokenizer.mjs';
  * @property {()=>void} command_function
  */
 
-// help message prompt
-function help() {
-  console.log('-----------------------------------------------------');
-  console.log('HELP:');
-  console.log('-----------------------------------------------------');
-  console.log('help     | This is where you currently are!');
-  console.log('version  | Print current version of do.');
-  console.log('parse    | Print the results of parsing a *.do file.');
-  console.log('validate | Validate a *.do file and its dependencies.');
-  console.log('-----------------------------------------------------');
-}
-
-//
-//
-
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
 
+/**
+ * @param {FileReader} fileReader
+ */
+function ProcessDoFile(fileReader) {
+  console.log('Processing', fileReader.filepath);
+  console.log();
+  const tokenizer = new Tokenizer(fileReader);
+  let [tokens, buffer] = tokenizer.nextLine();
+  while (tokens.length > 0) {
+    let str = '';
+    for (const token of tokens) {
+      str += decode(token);
+    }
+    console.log(str);
+    [tokens, buffer] = tokenizer.nextLine();
+  }
+}
+
+const CommandMap = new Map([
+  ['build', CommandBuild], //
+  ['copy', CommandCopy],
+  ['do', CommandDo],
+  ['run', CommandExecute],
+  ['when', CommandWatch],
+]);
 /**
  * Non-interactive commands are those parsed from *.do files. They cannot be
  * triggered directly in the terminal by a user.
  * @param {string} command
  */
 function ProcessCommand(command) {
+  return $if(InteractiveCommandMap.get(command), (fn) => fn());
+
   // Non-interactive Commands
   switch (command) {
     case 'build':
@@ -67,11 +80,7 @@ function ProcessCommand(command) {
       // do <*.do>
       // processes target file as if ran with do directly
       return true;
-    case 'run':
-      // run <executable>
-      // run <shell command>
-      return true;
-    case 'watch':
+    case 'when':
       // watch <file> <command>
       // watch <folder> <command>
       // watch <glob> <command>
@@ -80,115 +89,164 @@ function ProcessCommand(command) {
   }
   return false;
 }
-
-/**
- * @param {FileReader} fileReader
- */
-function ProcessFile(fileReader) {
-  console.log('Processing', fileReader.filepath);
-  console.log();
-  const tokenizer = new Tokenizer(fileReader);
-  let [tokens, buffer] = tokenizer.nextLine();
-  while (tokens.length > 0) {
-    let str = '';
-    for (const buffer of tokens) {
-      str += decode(buffer);
-    }
-    console.log(str);
-    [tokens, buffer] = tokenizer.nextLine();
-  }
+function CommandBuild() {
+  // build <subfolder>
+  // run build.do file in target subfolder
+}
+function CommandCopy() {
+  // copy from <file> to <folder>
+  // copy from <folder> to <folder>
+  // copy from <glob> to <folder>
+  // overwrites files?
+}
+function CommandDo() {}
+function CommandWatch() {
+  // watch <file> <command>
+  // watch <folder> <command>
+  // watch <glob> <command>
+  // the command may be any interactive/some non-interactive command
 }
 
-/**
- * @param {FileReader} fileReader
- */
-function ParseFile(fileReader) {
-  // TODO: use the lexer instead of tokenizer
-  console.log('Parsing', fileReader.filepath);
-  console.log();
-  const parser = new Parser(fileReader);
-  var { tokens, buffer } = parser.nextCommand(); // deal with var later
-  let line_count = 0;
-  while (tokens.length > 0) {
-    line_count += 1;
-    const texts = tokens;
-    const hbars = texts.map((token) => '═'.repeat(token.length));
-    console.log(`Line ${line_count}:`, decode(buffer));
-    console.log('╔' + hbars.join('╦') + '╗');
-    console.log('║' + texts.join('║') + '║');
-    console.log('╚' + hbars.join('╩') + '╝');
-    console.log();
-    var { tokens, buffer } = parser.nextCommand();
-  }
-}
-
+const InteractiveCommandMap = new Map([
+  ['help', ShowHelp], // print help information
+  ['version', ShowVersion], // print installed version of do
+  ['parse', PrintParse], // parse a do file and print each line of tokens
+  ['check', CommandValidate], // validate each do file and their dependencies in current folder
+  ['run', CommandExecute], // run executable file or shell command
+]);
 /**
  * Interactive commands are those entered into the terminal directly by a user.
  * The token immediately following "do" will be processed as an interactive
  * command. If the token is not reserved as an interactive command below, then
  * it will processed as a *.do filename, instead.
  * @param {string} command
+ * @param {string=} filepath
  */
-function ProcessInteractiveCommand(command) {
-  switch (command) {
-    case 'help':
-      // prints information about how to use do
-      help();
-      return true;
-    case 'version':
-      // prints version of do
-      console.log('0.0.1');
-      return true;
-    case 'parse':
-      // parses a file and prints each resulting line of lexemes
-      if (process.argv[3] !== undefined) {
-        ProcessFilename(process.argv[3], ParseFile);
-      } else {
-        console.log('Please provide a filepath to parse.');
-      }
-      return true;
-    case 'validate':
-      // validates every *.do file in the current directory and any *.do files might be called during execution
-      return true;
-    case 'run':
-      // run <executable>
-      // run <shell command>
-      return true;
+function HandleInteractiveCommand(command, filepath) {
+  return $if(InteractiveCommandMap.get(command), (fn) => fn(filepath));
+}
+const HelpInfoMap = new Map([
+  ['help', 'Print this message.'],
+  ['version', 'Print installed version of do.'],
+  ['parse', 'Print the results of parsing <File>.'],
+  ['check', 'Validate each <File> and their dependencies.'],
+  ['run', 'Run executable file or shell command.'],
+]);
+function ShowHelp() {
+  // do help
+  console.log('Usage: do <Command>|<Do_File> [<Do_File>|<Path>|<Shell_Command>]');
+  console.log();
+  console.log(`Examples
+  do run "echo hello world"
+  do run "echo \\"hello world\\""
+  do build.do
+  do build
+  `);
+  console.log('Command');
+  const commandColumnSize = Math.max(...[...HelpInfoMap.keys()].map((command) => command.length));
+  for (const [key, value] of HelpInfoMap) {
+    console.log(key.padEnd(commandColumnSize), '|', value);
   }
-  return false;
+  console.log();
+  console.log(`Do_File
+  A *.do filepath that resides in the current directory. The ".do" file
+  extension is optional.
+  `);
+  console.log(`Path
+  Any filepath that points to an executable file.
+  `);
+  console.log(`Shell_Command
+  A string that represents a shell command. Surround with double quotes "" if
+  spaces are necessary, ie: "echo hello world". Use \\" to include double quotes
+  within a quoted shell command, ie: "echo \\"hello world\\"".
+  `);
+}
+function ShowVersion() {
+  // do version
+  console.log('0.0.1');
+}
+/** @param {string=} filename */
+function PrintParse(filename) {
+  // do parse <do file>
+  if (filename !== undefined) {
+    HandleDoFile(filename, function (fileReader) {
+      console.log('Parsing', fileReader.filepath);
+      console.log();
+      const parser = new Parser(fileReader);
+      var { tokens, buffer } = parser.nextCommand(); // deal with var later
+      let line_count = 0;
+      while (tokens.length > 0) {
+        line_count += 1;
+        const texts = tokens;
+        const hbars = texts.map((token) => '═'.repeat(token.length));
+        console.log(`Line ${line_count}:`, decode(buffer));
+        console.log('╔' + hbars.join('╦') + '╗');
+        console.log('║' + texts.join('║') + '║');
+        console.log('╚' + hbars.join('╩') + '╝');
+        console.log();
+        var { tokens, buffer } = parser.nextCommand();
+      }
+    });
+  } else {
+    console.log('Please provide a *.do filepath to parse.');
+  }
+}
+/** @param {string=} filename */
+function CommandValidate(filename) {
+  // do check <do file>
+  console.log('Not implemented!');
+  if (filename !== undefined) {
+  }
+}
+/** @param {string=} filepathOrCommand */
+function CommandExecute(filepathOrCommand) {
+  // do run <executable filepath>
+  // do run <shell command>
+  console.log('Not implemented!');
+  if (filepathOrCommand !== undefined) {
+  }
 }
 
 /**
- * If the token immediately following "do" cannot be processed as an interactive
- * command, then it will processed as a *.do filename, instead.
+ * If the argument following "do" cannot be processed as an interactive
+ * command, then it will opened as a *.do filename, instead.
  * @param {string} filename
  * @param {(fileReader: FileReader) => void} callback
  */
-function ProcessFilename(filename, callback) {
-  // look for <filename> file in current directory
-  if (!UseFileReader(filename, callback)) {
+function HandleDoFile(filename, callback) {
+  if (!filename.endsWith('.do')) {
+    filename += '.do';
+  }
+  // TODO: look for <do file> in current directory only
+  if (UseFileReader(filename, callback)) {
     return true;
   }
-  // if not found, look for  <filename>.do file in current directory
-  if (!UseFileReader(filename + '.do', callback)) {
-    return true;
-  }
-  // if not found, console.error does not exist
-  console.log(`Could not find "${filename}" or "${filename}.do" in current directory.`);
+  console.log(`Could not find "${filename}" in current directory.`);
   return false;
 }
 
 /**
- * Chain of Responsibility
- * @typedef {function(string): boolean} Handler
+ * Chain of Responsibility pattern
+ * @typedef {function(string, string=): boolean} Handler
  * @type {Handler[]}
  */
 const handlers = [
-  ProcessInteractiveCommand, //
-  (filename) => ProcessFilename(filename, ProcessFile),
+  HandleInteractiveCommand, //
+  (filename) => HandleDoFile(filename, ProcessDoFile),
 ];
-for (const handler of handlers) {
-  if (handler(process.argv[2]) === true) {
-    break;
+
+/**
+ * The main function, which takes one or two arguments that correspond to
+ * either just a command/file name or a command and a file name.
+ * @param {string} arg1
+ * @param {string} [arg2]
+ */
+function Do(arg1, arg2) {
+  for (const handler of handlers) {
+    if (handler(arg1, arg2) === true) {
+      break;
+    }
   }
 }
+
+Do(process.argv[2], process.argv[3]);

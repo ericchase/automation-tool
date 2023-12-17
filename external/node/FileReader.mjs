@@ -45,9 +45,11 @@ export class FileReader extends Reader {
 }
 
 /**
+ * Try to open filepath as a FileReader. Return true on success. Return the
+ * error that was thrown on failure.
  * @param {string} filepath
  * @param {(fileReader: FileReader) => void} callback
- * @return {unknown|undefined} Error if there was an error.
+ * @return {true|unknown} The error if there was an error, true
  */
 export function UseFileReader(filepath, callback) {
   try {
@@ -61,5 +63,5 @@ export function UseFileReader(filepath, callback) {
   } catch (err) {
     return err;
   }
-  return undefined;
+  return true;
 }
