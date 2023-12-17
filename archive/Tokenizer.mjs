@@ -1,5 +1,5 @@
-import { LineBuffer } from '../lib/LineBuffer.mjs';
-import { Reader } from '../lib/Reader.mjs';
+import { LineBuffer } from './lib/LineBuffer.mjs';
+import { Reader } from './lib/Reader.mjs';
 
 export class Tokenizer {
   /**
@@ -12,7 +12,7 @@ export class Tokenizer {
   /**
    * Returns the next line of tokens along with the current line's buffer.
    * @this {Tokenizer}
-   * @return {[Uint8Array[], Uint8Array]} [Tokens, Buffer]
+   * @returns {[Uint8Array[], Uint8Array]} [Tokens, Buffer]
    */
   nextLine() {
     /** @type {Uint8Array[]} */
@@ -50,7 +50,7 @@ export class Tokenizer {
    * @param {number} begin
    * @param {number} end
    * @param {number} null_count
-   * @return {Uint8Array}
+   * @returns {Uint8Array}
    */
   static ExtractNonNullBytes(buffer, begin, end, null_count) {
     const u8 = new Uint8Array(end - begin - null_count);

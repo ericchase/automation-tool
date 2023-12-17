@@ -17,7 +17,7 @@ export class LineBuffer extends Buffer {
    * Returns a view of the buffer containing the next line, or the EmptyView if
    * there are no more bytes available.
    * @this {LineBuffer}
-   * @return {BufferView}
+   * @returns {BufferView}
    */
   next() {
     if (this.#nextLineDone === false) {
@@ -32,7 +32,7 @@ export class LineBuffer extends Buffer {
 
   /**
    * @this {LineBuffer}
-   * @return {Generator<BufferView, BufferView, unknown>}
+   * @returns {Generator<BufferView, BufferView, unknown>}
    */
   *#nextLine() {
     const buffer = new Uint8Array(this.#size);

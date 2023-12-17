@@ -1,5 +1,5 @@
-import { ConcatPrintableBytes, ExtractPrintableBytes } from '../lib/Buffer.mjs';
-import { Reader } from '../lib/Reader.mjs';
+import { ConcatPrintableBytes, ExtractPrintableBytes } from './lib/Buffer.mjs';
+import { Reader } from './lib/Reader.mjs';
 import { Tokenizer } from './Tokenizer.mjs';
 
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
@@ -15,7 +15,7 @@ export class Lexer {
   /**
    * Returns the next line of lexemes along with the current line's buffer.
    * @this {Lexer}
-   * @return {[Uint8Array[], Uint8Array]} [Lexemes, Buffer]
+   * @returns {[Uint8Array[], Uint8Array]} [Lexemes, Buffer]
    */
   nextLine() {
     /** @type {Uint8Array[]} */

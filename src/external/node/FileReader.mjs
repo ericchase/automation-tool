@@ -1,4 +1,4 @@
-import { closeSync, openSync, readSync } from 'fs';
+import { closeSync, openSync, readSync } from 'node:fs';
 import { Reader } from '../../lib/Reader.mjs';
 
 export class FileReader extends Reader {
@@ -28,7 +28,7 @@ export class FileReader extends Reader {
    * @override
    * @this {FileReader}
    * @param {Uint8Array} buffer
-   * @return {number} bytes read
+   * @returns {number} bytes read
    */
   read(buffer) {
     if (this.#descriptor) {
@@ -49,7 +49,7 @@ export class FileReader extends Reader {
  * error that was thrown on failure.
  * @param {string} filepath
  * @param {(fileReader: FileReader) => void} callback
- * @return {true|unknown} The error if there was an error, true
+ * @returns {true|unknown} The error if there was an error, true
  */
 export function UseFileReader(filepath, callback) {
   try {

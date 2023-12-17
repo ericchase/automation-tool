@@ -7,7 +7,7 @@ export class Buffer {
    * Returns a view of the buffer containing the next meaningful sequence of
    * bytes, or the EmptyView if there are no more bytes available.
    * @this {Buffer}
-   * @return {BufferView}
+   * @returns {BufferView}
    */
   next() {
     return Buffer.EmptyView;
@@ -20,7 +20,7 @@ export class Buffer {
 /**
  * Merge bytes from multiple buffers.
  * @param {Uint8Array[]} buffers
- * @return {Uint8Array}
+ * @returns {Uint8Array}
  */
 export function ConcatBytes(buffers) {
   let length = 0;
@@ -39,7 +39,7 @@ export function ConcatBytes(buffers) {
 /**
  * Extract and merge printable bytes from multiple buffer.
  * @param {Uint8Array[]} buffers
- * @return {Uint8Array}
+ * @returns {Uint8Array}
  */
 export function ConcatPrintableBytes(buffers) {
   const extracted = [];
@@ -61,7 +61,7 @@ export function ConcatPrintableBytes(buffers) {
 /**
  * Extract printable bytes from buffer.
  * @param {Uint8Array} buffer
- * @return {Uint8Array}
+ * @returns {Uint8Array}
  */
 export function ExtractPrintableBytes(buffer) {
   let length = 0;

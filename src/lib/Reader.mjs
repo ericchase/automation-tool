@@ -6,7 +6,7 @@ export class Reader {
    * and returns the number of bytes copied.
    * @this {Reader}
    * @param {Uint8Array} buffer
-   * @return {number} bytes copied
+   * @returns {number} bytes copied
    */
   read(buffer) {
     return 0;

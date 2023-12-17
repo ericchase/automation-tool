@@ -1,7 +1,7 @@
-import { BufferView } from '../lib/BufferView.mjs';
-import { BACKSLASH, CR, DOUBLE_QUOTE, LF, NULL, SPACE, TAB } from '../lib/Constants.mjs';
-import { LineBuffer } from '../lib/LineBuffer.mjs';
-import { Reader } from '../lib/Reader.mjs';
+import { BufferView } from './lib/BufferView.mjs';
+import { BACKSLASH, CR, DOUBLE_QUOTE, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
+import { LineBuffer } from './lib/LineBuffer.mjs';
+import { Reader } from './lib/Reader.mjs';
 
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
 
@@ -18,7 +18,7 @@ export class Parser {
   }
 
   /**
-   * @return {{buffer:Uint8Array, tokens:String[]}}
+   * @returns {{buffer:Uint8Array, tokens:String[]}}
    */
   nextCommand() {
     const view = this.#lineBuffer.next();
@@ -48,7 +48,7 @@ export class Parser {
 /**
  * Extracts all bytes that are not null characters (0x00).
  * @param {BufferView} view
- * @return {Uint8Array}
+ * @returns {Uint8Array}
  */
 function extractNonNullBytes(view) {
   let null_count = 0;
@@ -70,7 +70,7 @@ function extractNonNullBytes(view) {
 
 /**
  * @param {BufferView} view
- * @return {String[]}
+ * @returns {String[]}
  */
 function parseBuildCommand(view) {
   return [toPrintableString(nextToken(view))];
@@ -78,7 +78,7 @@ function parseBuildCommand(view) {
 
 /**
  * @param {BufferView} view
- * @return {String[]}
+ * @returns {String[]}
  */
 function parseWatchCommand(view) {
   const tokens = [];
@@ -92,7 +92,7 @@ function parseWatchCommand(view) {
 
 /**
  * @param {BufferView} view
- * @return {BufferView}
+ * @returns {BufferView}
  */
 function nextToken(view) {
   const startOffset = nextNonWhiteSpace(view);
@@ -112,7 +112,7 @@ function nextToken(view) {
 
 /**
  * @param {BufferView} view
- * @return {number} offset to view.buffer
+ * @returns {number} offset to view.buffer
  */
 function nextNonWhiteSpace(view) {
   let offset = view.start;
@@ -134,7 +134,7 @@ function nextNonWhiteSpace(view) {
 /**
  * Finds the next double quote not preceded by a backslash.
  * @param {BufferView} view
- * @return {number} offset to view.buffer
+ * @returns {number} offset to view.buffer
  */
 function nextStringMarker(view) {
   let offset = view.start;
@@ -158,7 +158,7 @@ function nextStringMarker(view) {
 
 /**
  * @param {BufferView} view
- * @return {number} offset to view.buffer
+ * @returns {number} offset to view.buffer
  */
 function nextWhiteSpace(view) {
   let offset = view.start;

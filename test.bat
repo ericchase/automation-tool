@@ -1,4 +1,7 @@
 pushd example
-node ../main.mjs version
-node ../main.mjs help
-node ../main.mjs parse build
+..\doto help
+..\doto version
+..\doto parse build
+..\doto check build
+..\doto run "echo hello world"
+popd

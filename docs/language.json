@@ -1,19 +1,37 @@
 [
   {
     "command": "build",
-    "argument1": "file path"
+    "variants": [
+      "<Sub_Folder>"
+    ]
   },
   {
     "command": "copy",
-    "argument1": "from file path",
-    "argument2": "to file path"
+    "variants": [
+      "from <Folder> to <Folder>",
+      "from <Path> to <Folder>",
+      "from <Glob> to <Folder>"
+    ]
+  },
+  {
+    "command": "doto",
+    "variants": [
+      "<Doto_File>"
+    ]
   },
   {
     "command": "run",
-    "argument1": "file path"
+    "variants": [
+      "<Path>",
+      "<Shell_Command>"
+    ]
   },
   {
-    "command": "watch",
-    "argument1": "file path"
+    "command": "when",
+    "variants": [
+      "<Folder> is modified, doto <Command>|<Doto_File>",
+      "<Path> is modified, doto <Command>|<Doto_File>",
+      "<Glob> is modified, doto <Command>|<Doto_File>"
+    ]
   }
 ]
