@@ -1,3 +1,4 @@
+import { Command } from './Command.mjs';
 import { BufferView } from './lib/BufferView.mjs';
 import { BACKSLASH, CR, DOUBLE_QUOTE, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
 import { LineBuffer } from './lib/LineBuffer.mjs';
@@ -18,7 +19,7 @@ export class Parser {
   }
 
   /**
-   * @returns {{buffer:Uint8Array, tokens:String[]}}
+   * @returns {Command}
    */
   nextCommand() {
     const view = this.#lineBuffer.next();
@@ -26,18 +27,28 @@ export class Parser {
     if (view.length > 0) {
       const commandName = nextToken(view);
       const commandArgs = view.newStart(commandName.end);
-      switch (toString(commandName)) {
+      const command = new Command(toString(commandName), [], buffer);
+      switch (command.name) {
+        case 'help':
+        case 'version':
+          command.tokens = [command.name];
+          return command;
+        case 'parse':
         case 'build':
-          return { buffer, tokens: parseBuildCommand(commandArgs) };
-        case 'watch':
-          return { buffer, tokens: parseWatchCommand(commandArgs) };
-        case 'copy':
-        case 'run':
-        case '=>': // subcommand
+          command.tokens = [command.name, ...parseOneToken(commandArgs)];
+          return command;
+        case 'check':
           throw 'not implemented';
+        case 'copy':
+        case 'doto':
+        case 'run':
+          throw 'not implemented';
+        case 'when':
+          command.tokens = [command.name, ...parseWhenCommand(commandArgs)];
+          return command;
       }
     }
-    return { buffer, tokens: [] };
+    return new Command('', [], buffer);
   }
 
   // these are meant to be for internal use only
@@ -72,7 +83,7 @@ function extractNonNullBytes(view) {
  * @param {BufferView} view
  * @returns {String[]}
  */
-function parseBuildCommand(view) {
+function parseOneToken(view) {
   return [toPrintableString(nextToken(view))];
 }
 
@@ -80,7 +91,7 @@ function parseBuildCommand(view) {
  * @param {BufferView} view
  * @returns {String[]}
  */
-function parseWatchCommand(view) {
+function parseWhenCommand(view) {
   const tokens = [];
   let nextView = nextToken(view);
   while (nextView.length > 0) {

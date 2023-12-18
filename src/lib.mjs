@@ -19,3 +19,10 @@ export function $if(value, fnThen, fnElse) {
   fnElse?.();
   return false;
 }
+
+/**
+ * @param {*} args
+ */
+export function stdOut(...args) {
+  console.log(...args);
+}

@@ -37,10 +37,8 @@ export class LineBuffer extends Buffer {
   *#nextLine() {
     const buffer = new Uint8Array(this.#size);
     let length = this.#reader.read(buffer);
-    let [begin, end] = [0, 0];
+    let [begin, end] = [0, length];
     while (length > 0) {
-      end = end - begin + length;
-      begin = 0;
       for (let i = 0; i < end; i += 1) {
         if (buffer[i] === LF) {
           yield new BufferView(buffer, begin, buffer[i - 1] === CR ? i - 1 : i);
@@ -54,7 +52,9 @@ export class LineBuffer extends Buffer {
       if (end - begin >= buffer.byteLength) {
         throw 'LineReader: Error: Buffer too small to hold next line.';
       }
-      length = this.#reader.read(new Uint8Array(buffer.buffer, end - begin));
+      length = this.#reader.read(buffer, end - begin);
+      end = end - begin + length;
+      begin = 0;
     }
     return new BufferView(buffer, begin, buffer[end - 1] === CR ? end - 1 : end);
   }

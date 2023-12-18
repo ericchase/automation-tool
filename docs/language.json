@@ -1,5 +1,17 @@
 [
   {
+    "command": "help"
+  },
+  {
+    "command": "version"
+  },
+  {
+    "command": "parse"
+  },
+  {
+    "command": "check"
+  },
+  {
     "command": "build",
     "variants": [
       "<Sub_Folder>"

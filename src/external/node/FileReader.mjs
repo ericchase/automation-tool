@@ -23,17 +23,22 @@ export class FileReader extends Reader {
   }
 
   /**
-   * Reads next `buffer.length` bytes from file into `buffer`, and returns the
-   * number of bytes read.
+   * Reads next `buffer.length` or `end-start` bytes from file into `buffer`,
+   * and returns the number of bytes read. The first bytes will be copied to
+   * offset `start` and continue from there.
    * @override
    * @this {FileReader}
    * @param {Uint8Array} buffer
-   * @returns {number} bytes read
+   * @param {number=} start
+   * @param {number=} end
+   * @returns {number} bytes copied
    */
-  read(buffer) {
+  read(buffer, start, end) {
+    start ??= 0;
+    end ??= buffer.length;
     if (this.#descriptor) {
       // @external-api
-      return readSync(this.#descriptor, buffer);
+      return readSync(this.#descriptor, buffer, start, end - start, null);
     }
     return 0;
   }
@@ -57,7 +62,7 @@ export function UseFileReader(filepath, callback) {
     try {
       callback(fileReader);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
     fileReader.close();
   } catch (err) {
