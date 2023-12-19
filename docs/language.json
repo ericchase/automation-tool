@@ -44,6 +44,9 @@
       "from <Directory> to <Directory>",
       "from <File> to <Directory>",
       "from <Glob> to <Directory>"
+    ],
+    "categories": [
+      "non-interactive"
     ]
   },
   {
@@ -70,6 +73,9 @@
       "<Directory> is modified, doto <Command>|<Doto_File>",
       "<File> is modified, doto <Command>|<Doto_File>",
       "<Glob> is modified, doto <Command>|<Doto_File>"
+    ],
+    "categories": [
+      "non-interactive"
     ]
   }
 ]
