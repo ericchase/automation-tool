@@ -53,20 +53,26 @@ export class FileReader extends Reader {
  * Try to open filepath as a FileReader. Return true on success. Return the
  * error that was thrown on failure.
  * @param {string} filepath
- * @param {(fileReader: FileReader) => void} callback
- * @returns {true|unknown} The error if there was an error, true
+ * @param {(fileReader: FileReader) => *|Promise<*>} callback
+ * @param {(error:unknown)=>*|Promise<*>=} onerror
  */
-export function UseFileReader(filepath, callback) {
+export async function UseFileReader(filepath, callback, onerror) {
   try {
     const fileReader = new FileReader(filepath);
     try {
-      callback(fileReader);
+      await callback(fileReader);
+      return true;
     } catch (err) {
-      console.error(err);
+      if (onerror) {
+        await onerror(err);
+      }
+    } finally {
+      fileReader.close();
     }
-    fileReader.close();
   } catch (err) {
-    return err;
+    if (onerror) {
+      await onerror(err);
+    }
   }
-  return true;
+  return false;
 }
