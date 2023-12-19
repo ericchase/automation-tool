@@ -1,10 +1,15 @@
+/**
+ * @template T
+ * @typedef {(request:T)=>Promise<boolean>} HandleRequest
+ */
+
 /** @template T */
 export class Handler {
   /**
-   * @param {T} request
-   * @returns {boolean}
+   * @this {Handler<T>}
+   * @type {HandleRequest<T>}
    */
-  handleRequest(request) {
+  async handleRequest(request) {
     return false;
   }
 }
@@ -17,12 +22,12 @@ export class HandlerChain {
     this.handlers = handlers;
   }
   /**
-   * @param {T} request
-   * @returns {boolean}
+   * @this {HandlerChain<T>}
+   * @type {HandleRequest<T>}
    */
-  handle(request) {
+  async handle(request) {
     for (const handler of this.handlers) {
-      if (handler.handleRequest(request) === true) {
+      if ((await handler.handleRequest(request)) === true) {
         return true;
       }
     }

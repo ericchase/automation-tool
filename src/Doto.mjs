@@ -1,53 +1,92 @@
 import { Handler } from './ChainOfResponsibility.mjs';
-import { PrettyPrintParserOutput, ProcessCommand } from './DotoCommand.mjs';
+import { ProcessInteractiveCommand, ProcessNonInteractiveCommand } from './DotoCommand.mjs';
 import { Parser } from './Parser.mjs';
-import { FileReader, UseFileReader } from './external/node/FileReader.mjs';
-import { stdOut } from './lib.mjs';
+import { $asyncloop, stdErr } from './lib.mjs';
+import { DirectoryManager } from './lib/DirectoryManager.mjs';
 import { StringReader } from './lib/StringReader.mjs';
+import { FileReader, UseFileReader } from './main.mjs';
+
+export const CurrentDirectory = new DirectoryManager();
+
+/** @typedef {(request:string[])=>Promise<boolean>} HandleRequest */
 
 /** @extends {Handler<string[]>} */
-export class CommandHandler extends Handler {
+export class InteractiveCommandHandler extends Handler {
   /**
    * Interactive commands are those entered into the terminal directly by a user.
    * The token immediately following "doto" will be processed as an interactive
    * command. If the token is not reserved as an interactive command below, then
    * it will processed as a *.doto filename, instead.
-   * @param {(string|undefined)[]} request
-   * @returns {boolean}
+   * @this {InteractiveCommandHandler}
+   * @type {HandleRequest}
    */
-  handleRequest([arg0, arg1]) {
-    const commandLine = [arg0 ?? '', arg1 ?? ''] //
-      .filter((part) => typeof part === 'string')
-      .filter((part) => part.length > 0)
-      .join(' ');
-    const parser = new Parser(new StringReader(commandLine));
+  async handleRequest(args) {
+    console.log('InteractiveCommandHandler:', args);
+    const parser = new Parser(new StringReader(args.join(' ')));
     const command = parser.nextCommand();
-    return ProcessCommand(command);
+    return ProcessInteractiveCommand(command);
+  }
+}
+
+/** @extends {Handler<string[]>} */
+export class NonInteractiveCommandHandler extends Handler {
+  /**
+   * Interactive commands are those entered into the terminal directly by a user.
+   * The token immediately following "doto" will be processed as an interactive
+   * command. If the token is not reserved as an interactive command below, then
+   * it will processed as a *.doto filename, instead.
+   * @this {NonInteractiveCommandHandler}
+   * @type {HandleRequest}
+   */
+  async handleRequest(args) {
+    console.log('NonInteractiveCommandHandler:', args);
+    const parser = new Parser(new StringReader(args.join(' ')));
+    const command = parser.nextCommand();
+    return ProcessNonInteractiveCommand(command);
   }
 }
 
 /** @extends {Handler<string[]>} */
 export class DotoFileHandler extends Handler {
   /**
-   * @param {(string|undefined)[]} request
-   * @returns {boolean}
+   * @this {DotoFileHandler}
+   * @type {HandleRequest}
    */
-  handleRequest([filename]) {
+  async handleRequest([filename]) {
+    console.log('DotoFileHandler:', filename);
     if (filename !== undefined) {
       if (!filename.endsWith('.doto')) filename += '.doto';
       // TODO: look for <Doto_File> in current directory only
-      if (UseFileReader(filename, ProcessDotoFile)) {
-        return true;
-      }
-      stdOut(`Could not find "${filename}" in current directory.`);
+      return UseFileReader(filename, ProcessDotoFile, (err) => {
+        stdErr(`Could not find the file "${filename}" in directory "${CurrentDirectory.get()}".`);
+      });
     }
     return false;
   }
 }
 
-/** @param {FileReader} fileReader */
-function ProcessDotoFile(fileReader) {
-  stdOut('Processing', fileReader.filepath);
-  stdOut();
-  PrettyPrintParserOutput(fileReader);
+/** @extends {Handler<string[]>} */
+export class HelpHandler extends Handler {
+  /**
+   * At this point, no previous handlers have succeeded. Show the help info.
+   * @type {HandleRequest}
+   */
+  async handleRequest() {
+    console.log('HelpHandler');
+    const parser = new Parser(new StringReader('help'));
+    const command = parser.nextCommand();
+    return ProcessInteractiveCommand(command);
+  }
+}
+
+/** @param {FileReader} reader */
+async function ProcessDotoFile(reader) {
+  console.log('ProcessDotoFile:', reader.filepath);
+  const parser = new Parser(reader);
+
+  await $asyncloop(
+    async () => parser.nextCommand(),
+    async (command) => command.tokens.length > 0,
+    async (command) => await ProcessNonInteractiveCommand(command),
+  );
 }

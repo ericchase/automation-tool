@@ -1,12 +1,21 @@
 // External
-import { getArg } from './external/deno/Argv.mjs';
+export { getArgs } from './external/deno/Argv.mjs';
+export { runFile } from './external/deno/ChildProcess.mjs';
+export { CurrentDirectory } from './external/deno/FileSystem.mjs';
+export { FileReader, UseFileReader } from './external/node/FileReader.mjs';
+import { getArgs } from './external/deno/Argv.mjs';
 
 // Internal
 import { HandlerChain } from './ChainOfResponsibility.mjs';
-import { DotoFileHandler, CommandHandler } from './Doto.mjs';
+import { DotoFileHandler, HelpHandler, InteractiveCommandHandler, NonInteractiveCommandHandler } from './Doto.mjs';
+
+export const interactiveCommandHandler = new InteractiveCommandHandler();
+export const nonInteractiveCommandHandler = new NonInteractiveCommandHandler();
+export const dotoFileHandler = new DotoFileHandler();
+export const helpHandler = new HelpHandler();
 
 new HandlerChain([
-  new CommandHandler(), //
-  new DotoFileHandler(),
-  // ErrorHandler
-]).handle([getArg(0) ?? 'help', getArg(1)]);
+  interactiveCommandHandler, //
+  dotoFileHandler,
+  helpHandler,
+]).handle(getArgs());

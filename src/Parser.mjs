@@ -1,4 +1,5 @@
 import { Command } from './Command.mjs';
+import { $loop } from './lib.mjs';
 import { BufferView } from './lib/BufferView.mjs';
 import { BACKSLASH, CR, DOUBLE_QUOTE, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
 import { LineBuffer } from './lib/LineBuffer.mjs';
@@ -22,33 +23,28 @@ export class Parser {
    * @returns {Command}
    */
   nextCommand() {
-    const view = this.#lineBuffer.next();
-    const buffer = view.toNewBuffer();
-    if (view.length > 0) {
-      const commandName = nextToken(view);
-      const commandArgs = view.newStart(commandName.end);
-      const command = new Command(toString(commandName), [], buffer);
-      switch (command.name) {
-        case 'help':
-        case 'version':
-          command.tokens = [command.name];
-          return command;
-        case 'parse':
-        case 'build':
-          command.tokens = [command.name, ...parseOneToken(commandArgs)];
-          return command;
-        case 'check':
-          throw 'not implemented';
-        case 'copy':
-        case 'doto':
-        case 'run':
-          throw 'not implemented';
-        case 'when':
-          command.tokens = [command.name, ...parseWhenCommand(commandArgs)];
-          return command;
+    const lineView = this.#lineBuffer.next();
+    const lineBuffer = lineView.toNewBuffer();
+    if (lineView.length > 0) {
+      const commandNameView = nextToken(lineView);
+      const commandName = toString(commandNameView);
+      if (commandName.length > 0) {
+        const command = new Command(commandName, [commandName], lineBuffer);
+
+        let currentView = commandNameView;
+        $loop(
+          () => nextToken(lineView.newStart(currentView.end)),
+          (nextView) => nextView.length > 0,
+          (nextView) => {
+            command.tokens.push(toPrintableString(nextView));
+            currentView = nextView;
+          },
+        );
+
+        return command;
       }
     }
-    return new Command('', [], buffer);
+    return new Command('', [], lineBuffer);
   }
 
   // these are meant to be for internal use only
@@ -77,28 +73,6 @@ function extractNonNullBytes(view) {
     }
   }
   return u8;
-}
-
-/**
- * @param {BufferView} view
- * @returns {String[]}
- */
-function parseOneToken(view) {
-  return [toPrintableString(nextToken(view))];
-}
-
-/**
- * @param {BufferView} view
- * @returns {String[]}
- */
-function parseWhenCommand(view) {
-  const tokens = [];
-  let nextView = nextToken(view);
-  while (nextView.length > 0) {
-    tokens.push(toPrintableString(nextView));
-    nextView = nextToken(view.newStart(nextView.end));
-  }
-  return tokens;
 }
 
 /**
