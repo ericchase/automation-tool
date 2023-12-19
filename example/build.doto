@@ -1,4 +1,1 @@
-doto example.doto
-build "./subfolder"
-when "./folder2" is modified, doto example.doto
-copy "./folder1" "./folder2"
+build ./nested

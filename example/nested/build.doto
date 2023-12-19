@@ -1,1 +1,1 @@
-run "echo build.doto"
+run cmd /c echo build.doto

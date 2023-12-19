@@ -6,7 +6,7 @@
  * @param {number} index
  * @returns {string=}
  */
-export function getArg(index) {
+export function GetArg(index) {
   return process.argv[index - 2] ?? undefined;
 }
 
@@ -17,6 +17,6 @@ export function getArg(index) {
  * these first 2 arguments are skipped.
  * @returns {string[]}
  */
-export function getArg() {
+export function GetArgs() {
   return process.argv.slice(2) ?? [];
 }

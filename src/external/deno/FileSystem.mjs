@@ -17,31 +17,44 @@ class CurrentDirectoryManager extends DirectoryManager {
 
   /**
    * @this {CurrentDirectoryManager}
-   * @param {string} value
+   * @param {string} path
    * @return {boolean}
    */
-  push(value) {
+  push(path) {
+    let sanitized = path.replaceAll('/', '\\');
     try {
-      ChangeCurrentWorkingDirectory(value.replaceAll('/', '\\'));
+      ChangeCurrentWorkingDirectory(sanitized);
       this.#list.push(GetCurrentWorkingDirectory());
       return true;
     } catch (err) {
-      stdErr('Could not push directory', value);
-      return false;
+      stdErr(`Could not open directory "${path}".`);
     }
+    return false;
   }
 
   /**
    * @this {CurrentDirectoryManager}
-   * @param {string} value
+   * @param {string} path
    * @return {boolean}
    */
-  pushSubdirectory(value) {
-    if (value.startsWith('./') || value.startsWith('.\\')) {
-      return this.push(value);
-    } else {
-      return this.push('.\\' + value);
+  pushSubdirectory(path) {
+    let sanitized = path.replaceAll('/', '\\');
+    if (!sanitized.startsWith('.\\') && !sanitized.startsWith('..\\')) {
+      sanitized = '.\\' + sanitized;
     }
+    try {
+      ChangeCurrentWorkingDirectory(sanitized);
+      const newDir = GetCurrentWorkingDirectory();
+      ChangeCurrentWorkingDirectory(this.get());
+      if (newDir.startsWith(this.get())) {
+        return this.push(newDir);
+      } else {
+        stdErr(`"${path}" is not a subdirectory of "${this.get()}".`);
+      }
+    } catch (err) {
+      stdErr(`Could not open directory "${path}".`);
+    }
+    return false;
   }
 
   /**
@@ -68,6 +81,7 @@ export const CurrentDirectory = new CurrentDirectoryManager();
 
 /**
  * @throws Deno.errors.NotFound if directory not available.
+ * @return {string}
  */
 function GetCurrentWorkingDirectory() {
   return Deno.cwd();

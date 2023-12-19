@@ -32,7 +32,7 @@
   {
     "command": "build",
     "variants": [
-      "<Sub_Folder>"
+      "<Sub_Directory>"
     ],
     "categories": [
       "non-interactive"
@@ -41,9 +41,9 @@
   {
     "command": "copy",
     "variants": [
-      "from <Folder> to <Folder>",
-      "from <File> to <Folder>",
-      "from <Glob> to <Folder>"
+      "from <Directory> to <Directory>",
+      "from <File> to <Directory>",
+      "from <Glob> to <Directory>"
     ]
   },
   {
@@ -67,7 +67,7 @@
   {
     "command": "when",
     "variants": [
-      "<Folder> is modified, doto <Command>|<Doto_File>",
+      "<Directory> is modified, doto <Command>|<Doto_File>",
       "<File> is modified, doto <Command>|<Doto_File>",
       "<Glob> is modified, doto <Command>|<Doto_File>"
     ]

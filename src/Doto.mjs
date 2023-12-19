@@ -1,12 +1,9 @@
 import { Handler } from './ChainOfResponsibility.mjs';
 import { ProcessInteractiveCommand, ProcessNonInteractiveCommand } from './DotoCommand.mjs';
 import { Parser } from './Parser.mjs';
+import { CurrentDirectory, FileReader, UseFileReader } from './external.mjs';
 import { $asyncloop, stdErr } from './lib.mjs';
-import { DirectoryManager } from './lib/DirectoryManager.mjs';
 import { StringReader } from './lib/StringReader.mjs';
-import { FileReader, UseFileReader } from './main.mjs';
-
-export const CurrentDirectory = new DirectoryManager();
 
 /** @typedef {(request:string[])=>Promise<boolean>} HandleRequest */
 
@@ -21,7 +18,7 @@ export class InteractiveCommandHandler extends Handler {
    * @type {HandleRequest}
    */
   async handleRequest(args) {
-    console.log('InteractiveCommandHandler:', args);
+    // console.log('InteractiveCommandHandler:', args);
     const parser = new Parser(new StringReader(args.join(' ')));
     const command = parser.nextCommand();
     return ProcessInteractiveCommand(command);
@@ -39,7 +36,7 @@ export class NonInteractiveCommandHandler extends Handler {
    * @type {HandleRequest}
    */
   async handleRequest(args) {
-    console.log('NonInteractiveCommandHandler:', args);
+    // console.log('NonInteractiveCommandHandler:', args);
     const parser = new Parser(new StringReader(args.join(' ')));
     const command = parser.nextCommand();
     return ProcessNonInteractiveCommand(command);
@@ -53,16 +50,28 @@ export class DotoFileHandler extends Handler {
    * @type {HandleRequest}
    */
   async handleRequest([filename]) {
-    console.log('DotoFileHandler:', filename);
+    // console.log('DotoFileHandler:', filename);
     if (filename !== undefined) {
       if (!filename.endsWith('.doto')) filename += '.doto';
       // TODO: look for <Doto_File> in current directory only
-      return UseFileReader(filename, ProcessDotoFile, (err) => {
+      return UseFileReader(filename, ProcessDotoFile, () => {
         stdErr(`Could not find the file "${filename}" in directory "${CurrentDirectory.get()}".`);
       });
     }
     return false;
   }
+}
+
+/** @param {FileReader} reader */
+async function ProcessDotoFile(reader) {
+  // console.log('ProcessDotoFile:', reader.filepath);
+  const parser = new Parser(reader);
+
+  await $asyncloop(
+    async () => parser.nextCommand(),
+    async (command) => command.tokens.length > 0,
+    async (command) => await ProcessNonInteractiveCommand(command),
+  );
 }
 
 /** @extends {Handler<string[]>} */
@@ -72,21 +81,14 @@ export class HelpHandler extends Handler {
    * @type {HandleRequest}
    */
   async handleRequest() {
-    console.log('HelpHandler');
+    // console.log('HelpHandler');
     const parser = new Parser(new StringReader('help'));
     const command = parser.nextCommand();
     return ProcessInteractiveCommand(command);
   }
 }
 
-/** @param {FileReader} reader */
-async function ProcessDotoFile(reader) {
-  console.log('ProcessDotoFile:', reader.filepath);
-  const parser = new Parser(reader);
-
-  await $asyncloop(
-    async () => parser.nextCommand(),
-    async (command) => command.tokens.length > 0,
-    async (command) => await ProcessNonInteractiveCommand(command),
-  );
-}
+export const interactiveCommandHandler = new InteractiveCommandHandler();
+export const nonInteractiveCommandHandler = new NonInteractiveCommandHandler();
+export const dotoFileHandler = new DotoFileHandler();
+export const helpHandler = new HelpHandler();

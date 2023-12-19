@@ -97,11 +97,22 @@ async function asyncloop({ step, condition, body }) {
   }
 }
 
+let lastStdOutNewlineOnce = false;
 /**
  * @param {*} args
  */
 export function stdOut(...args) {
+  lastStdOutNewlineOnce = false;
   console.log(...args);
+}
+/**
+ * @param {*} args
+ */
+export function stdOutNewlineOnce(...args) {
+  if (lastStdOutNewlineOnce === false) {
+    lastStdOutNewlineOnce = true;
+    console.log(...args);
+  }
 }
 /**
  * @param {*} args

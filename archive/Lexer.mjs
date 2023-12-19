@@ -106,11 +106,9 @@ export class Lexer {
         // don't push tokens
       } else {
         if (begin === i_token) {
-          console.log('single');
           lexemes.push(ExtractPrintableBytes(token));
           begin = i_token + 1;
         } else {
-          console.log('multie');
           lexemes.push(ConcatPrintableBytes(tokens.slice(begin, i_token + 1)));
           begin = i_token + 1;
         }

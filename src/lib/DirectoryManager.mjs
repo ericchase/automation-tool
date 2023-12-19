@@ -8,20 +8,24 @@ export class DirectoryManager {
     return '';
   }
   /**
+   * If `path` is accessible change the current working directory to `path` and
+   * return true; otherwise, return false.
    * @this {DirectoryManager}
-   * @param {string} value
+   * @param {string} path
    * @return {boolean}
    */
-  push(value) {
+  push(path) {
     return false;
   }
   /**
+   * If `path` resides within the current working directory, change the current
+   * working directory to `path` and return true; otherwise, return false.
    * @this {DirectoryManager}
-   * @param {string} value
+   * @param {string} path
    * @return {boolean}
    */
-  pushSubdirectory(value) {
-    return this.push(value);
+  pushSubdirectory(path) {
+    return this.push(path);
   }
   /**
    * @this {DirectoryManager}

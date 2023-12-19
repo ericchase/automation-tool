@@ -3,7 +3,7 @@
  * @param {number} index
  * @returns {string=}
  */
-export function getArg(index) {
+export function GetArg(index) {
   return Deno.args[index] ?? undefined;
 }
 
@@ -11,6 +11,6 @@ export function getArg(index) {
  * Wrapper over `Deno.args` api.
  * @returns {string[]}
  */
-export function getArgs() {
+export function GetArgs() {
   return Deno.args ?? [];
 }
