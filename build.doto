@@ -1,4 +1,1 @@
-doto build ../
-doto build example
-doto build example-build/project-1
-doto build example-build/project-2
+copy * from "C:/Code/@WebDevWorkspace/lib--web-dev/build" into "./lib--web-dev"

@@ -1,7 +1,7 @@
 import { Command, notImplemented } from './Command.mjs';
 import { dotoFileHandler, nonInteractiveCommandHandler } from './Doto.mjs';
 import { Parser } from './Parser.mjs';
-import { CurrentDirectory, Run, UseFileReader } from './external.mjs';
+import { CopyFolder, CurrentDirectory, Run, UseFileReader } from './external.mjs';
 import { $asyncif, $loop, stdOut, stdOutNewlineOnce } from './lib.mjs';
 import { Reader } from './lib/Reader.mjs';
 
@@ -14,8 +14,10 @@ const InteractiveCommandMap = new Map([
 
 const NonInteractiveCommandMap = new Map([
   ['build', CommandBuild],
+  ['copy', CommandCopy],
   ['doto', CommandDoto],
   ['run', CommandRun],
+  ['when', CommandWhen],
 ]);
 
 /**
@@ -32,6 +34,7 @@ const HelpInfoMap = new Map([
 
 /** @type {CommandHandler} */
 async function CommandHelp() {
+  // TODO: rewrite this whole thing
   stdOut('Doto Help');
   stdOut();
   stdOut('Usage: doto <Command>|<Doto_File> [<Doto_File>|<File>]');
@@ -95,9 +98,12 @@ async function CommandBuild(command) {
 /** @type {CommandHandler} */
 async function CommandCopy(command) {
   stdOut(`Doto Copy ${command.tokens.slice(1).join(' ')}`);
-
-  // TODO:
-  notImplemented(command);
+  if (command.tokens[2] === 'from' && command.tokens[4] === 'into') {
+    const glob = command.tokens[1];
+    const from = command.tokens[3];
+    const to = command.tokens[5];
+    await CopyFolder(glob, from, to);
+  }
 }
 
 /** @type {CommandHandler} */

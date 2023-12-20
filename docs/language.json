@@ -41,9 +41,7 @@
   {
     "command": "copy",
     "variants": [
-      "from <Directory> to <Directory>",
-      "from <File> to <Directory>",
-      "from <Glob> to <Directory>"
+      "<Glob> from <Directory> into <Directory>"
     ],
     "categories": [
       "non-interactive"

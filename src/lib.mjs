@@ -38,13 +38,13 @@ export async function $asyncif(value, asyncThen, asyncElse) {
  * @typedef LoopConfig
  * @property {()=>T} step
  * @property {(value:T,index:number)=>boolean} condition
- * @property {(value:T,index:number)=>*} body
+ * @property {(value:T,index:number,done:()=>void)=>*} body
  */
 /**
  * @template T
  * @param {(()=>T)|LoopConfig<T>} step
  * @param {(value:T,index:number)=>boolean=} condition
- * @param {(value:T,index:number)=>*=} body
+ * @param {(value:T,index:number,done:()=>void)=>*=} body
  */
 export function $loop(step, condition, body) {
   if (typeof step === 'function') {
@@ -60,8 +60,11 @@ export function $loop(step, condition, body) {
  * @param {LoopConfig<T>} params
  */
 function loop({ step, condition, body }) {
+  let isDone = false;
+  const done = () => (isDone = true);
   for (let value = step(), index = 0; condition(value, index) === true; value = step(), index++) {
-    body(value, index);
+    body(value, index, done);
+    if (isDone) return;
   }
 }
 
@@ -70,13 +73,13 @@ function loop({ step, condition, body }) {
  * @typedef AsyncLoopConfig
  * @property {()=>Promise<T>} step
  * @property {(value:T,index:number)=>Promise<boolean>} condition
- * @property {(value:T,index:number)=>Promise<*>} body
+ * @property {(value:T,index:number,done:()=>void)=>Promise<*>} body
  */
 /**
  * @template T
  * @param {(()=>Promise<T>)|AsyncLoopConfig<T>} step
  * @param {(value:T,index:number)=>Promise<boolean>=} condition
- * @param {(value:T,index:number)=>*=} body
+ * @param {(value:T,index:number,done:()=>void)=>*=} body
  */
 export async function $asyncloop(step, condition, body) {
   if (typeof step === 'function') {
@@ -92,8 +95,11 @@ export async function $asyncloop(step, condition, body) {
  * @param {AsyncLoopConfig<T>} params
  */
 async function asyncloop({ step, condition, body }) {
+  let isDone = false;
+  const done = () => (isDone = true);
   for (let value = await step(), index = 0; (await condition(value, index)) === true; value = await step(), index++) {
-    await body(value, index);
+    await body(value, index, done);
+    if (isDone) return;
   }
 }
 
