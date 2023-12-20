@@ -1,3 +1,5 @@
+import { EmptyBuffer } from './Constants.mjs';
+
 export class BufferView {
   /**
    * By convention, BufferView.end is considered outside of the view.
@@ -63,4 +65,6 @@ export class BufferView {
   toNewBuffer() {
     return this.buffer.slice(this.start, this.end);
   }
+
+  static EOF = new BufferView(EmptyBuffer);
 }

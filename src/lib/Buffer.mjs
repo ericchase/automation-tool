@@ -5,16 +5,13 @@ export class Buffer {
 
   /**
    * Returns a view of the buffer containing the next meaningful sequence of
-   * bytes, or the EmptyView if there are no more bytes available.
+   * bytes, or the EOF if there are no more bytes available.
    * @this {Buffer}
    * @returns {BufferView}
    */
   next() {
-    return Buffer.EmptyView;
+    return BufferView.EOF;
   }
-
-  static Empty = new Uint8Array(0);
-  static EmptyView = new BufferView(Buffer.Empty);
 }
 
 /**

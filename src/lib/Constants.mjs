@@ -5,3 +5,5 @@ export const CR = 0x0d; // carriage return
 export const SPACE = 0x20; // space
 export const DOUBLE_QUOTE = 0x22; // double quote
 export const BACKSLASH = 0x5c; // backslash
+
+export const EmptyBuffer = new Uint8Array(0);

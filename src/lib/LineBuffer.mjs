@@ -25,7 +25,7 @@ export class LineBuffer extends Buffer {
       this.#nextLineDone = done === true;
       return view;
     }
-    return Buffer.EmptyView;
+    return BufferView.EOF;
   }
 
   // these are meant to be for internal use only

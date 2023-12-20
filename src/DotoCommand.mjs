@@ -88,10 +88,14 @@ async function CommandCheck(command) {
 async function CommandBuild(command) {
   const subDirectory = command.tokens[1];
   stdOut(`Doto Build "${subDirectory}"`);
-
   if (CurrentDirectory.pushSubdirectory(command.tokens[1])) {
-    await dotoFileHandler.handleRequest(['build']);
-    CurrentDirectory.pop();
+    try {
+      await dotoFileHandler.handleRequest(['build']);
+    } catch (err) {
+      throw err;
+    } finally {
+      CurrentDirectory.pop();
+    }
   }
 }
 
@@ -103,6 +107,8 @@ async function CommandCopy(command) {
     const from = command.tokens[3];
     const to = command.tokens[5];
     await CopyFolder(glob, from, to);
+  } else {
+    throw 'Invalid Syntax for Copy';
   }
 }
 
@@ -155,7 +161,7 @@ export function PrettyPrintParserOutput(reader) {
 
   $loop(
     () => parser.nextCommand(),
-    (command) => command.tokens.length > 0,
+    (command) => command !== Parser.EOF,
     (command, index) => {
       const texts = command.tokens;
       const hbars = texts.map((token) => '═'.repeat(token.length));

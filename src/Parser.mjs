@@ -1,7 +1,8 @@
 import { Command } from './Command.mjs';
 import { $loop } from './lib.mjs';
+import { Buffer } from './lib/Buffer.mjs';
 import { BufferView } from './lib/BufferView.mjs';
-import { BACKSLASH, CR, DOUBLE_QUOTE, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
+import { BACKSLASH, CR, DOUBLE_QUOTE, EmptyBuffer, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
 import { LineBuffer } from './lib/LineBuffer.mjs';
 import { Reader } from './lib/Reader.mjs';
 
@@ -25,27 +26,33 @@ export class Parser {
   nextCommand() {
     const lineView = this.#lineBuffer.next();
     const lineBuffer = lineView.toNewBuffer();
-    if (lineView.length > 0) {
-      const commandNameView = nextToken(lineView);
-      const commandName = toString(commandNameView);
-      if (commandName.length > 0) {
-        const command = new Command(commandName, [commandName], lineBuffer);
-
-        let currentView = commandNameView;
-        $loop(
-          () => nextToken(lineView.newStart(currentView.end)),
-          (nextView) => nextView.length > 0,
-          (nextView) => {
-            command.tokens.push(toPrintableString(nextView));
-            currentView = nextView;
-          },
-        );
-
-        return command;
+    if (lineView !== BufferView.EOF) {
+      try {
+        const commandNameView = nextToken(lineView);
+        const commandName = toString(commandNameView);
+        if (commandName.length > 0) {
+          const command = new Command(commandName, [commandName], lineBuffer);
+          let currentView = commandNameView;
+          $loop(
+            () => nextToken(lineView.newStart(currentView.end)),
+            (nextView) => nextView.length > 0,
+            (nextView) => {
+              command.tokens.push(toPrintableString(nextView));
+              currentView = nextView;
+            },
+          );
+          return command;
+        }
+      } catch (err) {
+        throw `Invalid Syntax >> ${toPrintableString(lineView)}`;
       }
+      return Parser.EmptyLine;
     }
-    return new Command('', [], lineBuffer);
+    return Parser.EOF;
   }
+
+  static EmptyLine = new Command('', [], EmptyBuffer);
+  static EOF = new Command('', [], EmptyBuffer);
 
   // these are meant to be for internal use only
 
@@ -84,7 +91,7 @@ function nextToken(view) {
   if (startOffset < view.end) {
     // if token starts with double quote, skip to next double quote
     if (view.buffer[startOffset] === DOUBLE_QUOTE) {
-      const endOffset = nextStringMarker(view.newStart(startOffset + 1)) + 1;
+      const endOffset = nextStringMarker(view.newStart(startOffset + 1));
       const newView = view.newOffsets(startOffset, endOffset);
       processStringLiteral(newView);
       return newView;
@@ -131,14 +138,17 @@ function nextStringMarker(view) {
           escapeNext = false;
           break;
         }
-        return offset;
+        return offset + 1;
       case BACKSLASH:
-        escapeNext = true;
+        escapeNext = !escapeNext;
+        break;
+      default:
+        escapeNext = false;
         break;
     }
     offset++;
   }
-  return offset;
+  throw 'error';
 }
 
 /**
@@ -190,7 +200,14 @@ function processStringLiteral(view) {
         }
         break;
       case BACKSLASH:
+        if (escapeNext === true) {
+          escapeNext = false;
+          view.buffer[offset - 1] = NULL;
+        }
         escapeNext = true;
+        break;
+      default:
+        escapeNext = false;
         break;
     }
   }

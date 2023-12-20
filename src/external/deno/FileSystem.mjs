@@ -9,28 +9,10 @@ import { walk } from 'https://deno.land/std@0.209.0/fs/walk.ts';
  * @property {string} path
  */
 
-import { stdErr } from '../../lib.mjs';
 import { DirectoryManager } from '../../lib/DirectoryManager.mjs';
 
 /** @type {(path:string)=>WalkEntry[]} walk */
 const Walk = walk;
-
-/**
- * @throws Deno.errors.NotFound if directory not available.
- * @return {string}
- */
-function GetCurrentWorkingDirectory() {
-  return Deno.cwd();
-}
-
-/**
- * @throws Deno.errors.NotFound if directory not found.
- * @throws Deno.errors.PermissionDenied if the user does not have operating system file access rights.
- * @param {string} path
- */
-function ChangeCurrentWorkingDirectory(path) {
-  Deno.chdir(path);
-}
 
 class CurrentDirectoryManager extends DirectoryManager {
   constructor() {
@@ -58,9 +40,8 @@ class CurrentDirectoryManager extends DirectoryManager {
       this.#list.push(GetCurrentWorkingDirectory());
       return true;
     } catch (err) {
-      stdErr(`Could not open directory "${path}".`);
+      throw `Could not open directory "${path}".`;
     }
-    return false;
   }
 
   /**
@@ -73,19 +54,19 @@ class CurrentDirectoryManager extends DirectoryManager {
     if (!sanitized.startsWith('.\\') && !sanitized.startsWith('..\\')) {
       sanitized = '.\\' + sanitized;
     }
+    let newDir = '';
     try {
       ChangeCurrentWorkingDirectory(sanitized);
-      const newDir = GetCurrentWorkingDirectory();
+      newDir = GetCurrentWorkingDirectory();
       ChangeCurrentWorkingDirectory(this.get());
-      if (newDir.startsWith(this.get())) {
-        return this.push(newDir);
-      } else {
-        stdErr(`"${path}" is not a subdirectory of "${this.get()}".`);
-      }
     } catch (err) {
-      stdErr(`Could not open directory "${path}".`);
+      throw `Could not open directory "${path}".`;
     }
-    return false;
+    if (newDir.startsWith(this.get())) {
+      return this.push(newDir);
+    } else {
+      throw `"${path}" is not a subdirectory of "${this.get()}".`;
+    }
   }
 
   /**
@@ -100,12 +81,46 @@ class CurrentDirectoryManager extends DirectoryManager {
       ChangeCurrentWorkingDirectory(this.get());
       return true;
     } catch (err) {
-      stdErr('Could not change directory to', this.get());
-      return false;
+      throw `Could not change directory to ${this.get()}`;
     }
   }
 
   #list;
+}
+
+export const CurrentDirectory = new CurrentDirectoryManager();
+
+/**
+ * @throws Deno.errors.NotFound if directory not available.
+ * @return {string}
+ */
+function GetCurrentWorkingDirectory() {
+  return Deno.cwd();
+}
+
+/**
+ * @throws Deno.errors.NotFound if directory not found.
+ * @throws Deno.errors.PermissionDenied if the user does not have operating system file access rights.
+ * @param {string} path
+ */
+function ChangeCurrentWorkingDirectory(path) {
+  Deno.chdir(path);
+}
+
+/**
+ * @param {string} filepath
+ * @return {boolean}
+ */
+export function IsFileInCurrentDirectory(filepath) {
+  let sanitized = filepath.replaceAll('/', '\\');
+  if (!sanitized.startsWith('.\\') && !sanitized.startsWith('..\\')) {
+    sanitized = '.\\' + sanitized;
+  }
+  const dirPath = GetDirectoryPath(sanitized.split('\\')[0]);
+  if (dirPath && dirPath.startsWith(CurrentDirectory.get())) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -120,9 +135,8 @@ export function GetDirectoryPath(path) {
     Deno.chdir(cwd);
     return target;
   } catch (err) {
-    console.log(err);
+    throw err;
   }
-  return undefined;
 }
 
 /**
@@ -160,16 +174,8 @@ export async function CopyFolder(glob, from, to) {
         }
       }
     }
-    try {
-      await Promise.allSettled([...toDirPathSet].map((path) => Deno.mkdir(path, { recursive: true })));
-    } catch (err) {
-      console.log('mkdir error:', err);
-    }
-    try {
-      await Promise.allSettled([...copyMap].map(([from, to]) => Deno.copyFile(from, to)));
-    } catch (err) {
-      console.log('copyfile error:', err);
-    }
+    await Promise.allSettled([...toDirPathSet].map((path) => Deno.mkdir(path, { recursive: true })));
+    await Promise.allSettled([...copyMap].map(([from, to]) => Deno.copyFile(from, to)));
   }
 }
 
@@ -191,5 +197,3 @@ function getAbsoluteDirPath(entry, map) {
     }
   }
 }
-
-export const CurrentDirectory = new CurrentDirectoryManager();
