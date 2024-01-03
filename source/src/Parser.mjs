@@ -1,16 +1,11 @@
 import { Command } from './Command.mjs';
 import { $loop } from './lib.mjs';
-import { Buffer } from './lib/Buffer.mjs';
 import { BufferView } from './lib/BufferView.mjs';
 import { BACKSLASH, CR, DOUBLE_QUOTE, EmptyBuffer, LF, NULL, SPACE, TAB } from './lib/Constants.mjs';
 import { LineBuffer } from './lib/LineBuffer.mjs';
 import { Reader } from './lib/Reader.mjs';
 
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
-
-/**
- * @typedef {[number, number]} Range
- */
 
 export class Parser {
   /**
@@ -223,7 +218,7 @@ function toString(view) {
 /**
  * @param {BufferView} view
  */
-function toPrintableString(view) {
+export function toPrintableString(view) {
   processNonPrintableBytes(view);
   return decode(extractNonNullBytes(view));
 }

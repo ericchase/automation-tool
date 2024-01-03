@@ -1,0 +1,49 @@
+[
+  {
+    "command": "help",
+    "categories": ["interactive"]
+  },
+  {
+    "command": "version",
+    "categories": ["interactive"]
+  },
+  {
+    "command": "build",
+    "categories": ["non-interactive"],
+    "variants": ["<Sub_Directory>"]
+  },
+  {
+    "command": "check",
+    "categories": ["interactive"],
+    "variants": ["<Doto_File>"]
+  },
+  {
+    "command": "doto",
+    "categories": ["non-interactive"],
+    "variants": ["<Doto_File>"]
+  },
+  {
+    "command": "parse",
+    "categories": ["interactive"],
+    "variants": ["<Doto_File>"]
+  },
+  {
+    "command": "run",
+    "categories": ["non-interactive"],
+    "variants": ["<File> <Args>"]
+  },
+  {
+    "command": "copy",
+    "categories": ["non-interactive"],
+    "variants": ["<Glob> from <Directory> into <Directory>"]
+  },
+  {
+    "command": "when",
+    "categories": ["non-interactive"],
+    "variants": [
+      "<Directory> is modified, doto <Doto_File>",
+      "<File> is modified, doto <Doto_File>",
+      "<Glob> is modified, doto <Doto_File>"
+    ]
+  }
+]

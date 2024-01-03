@@ -5,9 +5,10 @@ export class BufferView {
    * By convention, BufferView.end is considered outside of the view.
    * @param {Uint8Array} buffer
    * @param {number} start
-   * @param {number} end
+   * @param {number=} end
    */
-  constructor(buffer, start = 0, end = 0) {
+  constructor(buffer, start = 0, end) {
+    end ??= buffer.length;
     this.buffer = buffer;
     this.start = start;
     this.end = end;
@@ -67,4 +68,25 @@ export class BufferView {
   }
 
   static EOF = new BufferView(EmptyBuffer);
+}
+
+/**
+ * Merge bytes from multiple buffers.
+ * @param {BufferView[]} views
+ * @returns {BufferView}
+ */
+export function ConcatViews(views) {
+  let bufferSize = 0;
+  for (const view of views) {
+    bufferSize += view.length;
+  }
+  const buffer = new Uint8Array(bufferSize);
+  let offset = 0;
+  for (const view of views) {
+    for (let index = view.start; index < view.end; index++) {
+      buffer[offset] = view.buffer[index];
+      offset++;
+    }
+  }
+  return new BufferView(buffer);
 }

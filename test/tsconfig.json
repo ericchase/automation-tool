@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./build",
+    "strict": true,
+    "target": "ESNext"
+  },
+  "include": ["./src/**/*.ts"]
+}

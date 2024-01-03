@@ -4,5 +4,13 @@
 *.exe
 *.log*
 
-build/
 node_modules/
+
+# output directories
+build/
+debug/
+dist/
+target/
+
+# misc
+test/use-cases/

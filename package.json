@@ -1,12 +1,9 @@
 {
   "scripts": {
-    "build": "build-deno.ps1",
-    "test": "test.bat",
     "format-debug": "prettier . --debug-check",
     "format": "prettier . --write"
   },
   "devDependencies": {
-    "pkg": "^5.8.1",
     "prettier": "^3.1.1"
   }
 }

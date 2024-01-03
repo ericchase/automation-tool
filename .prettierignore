@@ -1,4 +1,10 @@
-.vscode/
+.DS_Store
+.vscode
+*.env*
+*.exe
+*.log*
+
+node_modules/
 
 # output directories
 build/
@@ -13,4 +19,5 @@ pnpm-lock.yaml
 yarn.lock
 
 # misc
-docs/
+source/docs/
+test/use-cases/

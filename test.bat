@@ -1,1 +1,0 @@
-.\doto.exe build
