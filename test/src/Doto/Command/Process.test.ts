@@ -1,7 +1,7 @@
 import { describe, expect, jest, test } from '@jest/globals';
 
-import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../automation-tool/build/Doto/Command/Command.js';
-import { Process } from '../../../../automation-tool/build/Doto/Command/Process.js';
+import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../source/build/Doto/Command/Command.js';
+import { Process } from '../../../../source/build/Doto/Command/Process.js';
 
 const encode = ((encoder) => encoder.encode.bind(encoder))(new TextEncoder());
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
@@ -30,7 +30,7 @@ function buildCommand(type: CommandType, args: string[], lineNumber: number): IC
   return new Command(type, encodedArgs, 'Test', lineNumber, line);
 }
 
-describe('Process Command', () => {
+describe('Command Process', () => {
   test('version', () => {
     const logs: string[] = [];
     const spy = jest.spyOn(console, 'log').mockImplementation((...args: any) => {

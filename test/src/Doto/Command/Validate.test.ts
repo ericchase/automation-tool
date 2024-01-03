@@ -1,8 +1,8 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../automation-tool/build/Doto/Command/Command.js';
-import { CommandError, PrettyFormatCommandError } from '../../../../automation-tool/build/Doto/Command/CommandError.js';
-import { Validate } from '../../../../automation-tool/build/Doto/Command/Validate.js';
+import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../source/build/Doto/Command/Command.js';
+import { CommandError, PrettyFormatCommandError } from '../../../../source/build/Doto/Command/CommandError.js';
+import { Validate } from '../../../../source/build/Doto/Command/Validate.js';
 
 const encode = ((encoder) => encoder.encode.bind(encoder))(new TextEncoder());
 const decode = ((decoder) => decoder.decode.bind(decoder))(new TextDecoder());
@@ -31,7 +31,7 @@ function buildCommand(type: CommandType, args: string[], lineNumber: number): IC
   return new Command(type, encodedArgs, 'Test', lineNumber, line);
 }
 
-describe('Validate Command Syntax', () => {
+describe('Command Validate', () => {
   describe('help/version', () => {
     test('proper form passes', () => {
       const commands: ICommand[] = [

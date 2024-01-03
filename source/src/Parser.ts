@@ -1,3 +1,0 @@
-class Tokenizer {
-  ProcessLine() {}
-}
