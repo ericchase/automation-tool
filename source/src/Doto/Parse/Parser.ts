@@ -1,5 +1,18 @@
-import { Uint8Reader, Uint8Type, Uint8View } from '../Uint8.js';
-import { IToken, Token, TokenType, Uint8ToTokenType } from './Token.js';
+import { Uint8Reader, Uint8Type, Uint8View, Uint8ViewCompare, Uint8ViewConcat } from '../Uint8.js';
+import {
+  IParsedLine,
+  IParsedToken,
+  IToken,
+  ITokenizedLine,
+  ParsedLine,
+  ParsedToken,
+  ParsedTokenType,
+  NOP,
+  Token,
+  TokenType,
+  TokenizedLine,
+  Uint8ToTokenType,
+} from './Token.js';
 
 export async function ApplyToLines(reader: Uint8Reader, fn: (lineNumber: number, lineBuffer: Uint8Array) => Promise<void>): Promise<void> {
   let lineNumber = 1;
@@ -37,18 +50,6 @@ export async function ApplyToLines(reader: Uint8Reader, fn: (lineNumber: number,
   }
 }
 
-export interface ITokenizedLine {
-  number: number;
-  tokens: IToken[];
-}
-
-export class TokenizedLine implements ITokenizedLine {
-  constructor(
-    public number: number,
-    public tokens: IToken[],
-  ) {}
-}
-
 export function TokenizeLine(lineNumber: number, lineBuffer: Uint8Array): ITokenizedLine {
   const tokens: IToken[] = [];
 
@@ -60,7 +61,7 @@ export function TokenizeLine(lineNumber: number, lineBuffer: Uint8Array): IToken
       case TokenType.DoubleQuote:
         tokens.push(new Token(tokenType, new Uint8View(lineBuffer, i, i + 1)));
         break;
-      case TokenType.Glyph:
+      case TokenType.String:
       case TokenType.WhiteSpace:
         {
           const start = i;
@@ -89,27 +90,121 @@ export async function Tokenize(reader: Uint8Reader): Promise<ITokenizedLine[]> {
   return lines;
 }
 
-export interface IParsedLine {
-  number: number;
-  tokens: IToken[];
-}
+export function ParseLine(lineNumber: number, lineBuffer: Uint8Array): IParsedLine {
+  const line = TokenizeLine(lineNumber, lineBuffer);
+  const tokens: IParsedToken[] = [];
 
-export class ParsedLine implements IParsedLine {
-  constructor(
-    public number: number,
-    public tokens: IToken[],
-  ) {}
-}
+  (() => {
+    // empty line
+    if (line.tokens.length === 0) {
+      return;
+    }
 
-export function ParseLine(line: ITokenizedLine): IParsedLine {
-  // TODO:
-  return new ParsedLine(line.number, line.tokens);
+    // comment
+    if (line.tokens[0].view.length >= 2) {
+      const token = line.tokens[0];
+      if (Uint8ViewCompare(token.view.newEnd(2), new Uint8View(new Uint8Array([Uint8Type.Slash, Uint8Type.Slash])))) {
+        const views = line.tokens.map((token) => token.view);
+        tokens.push(new ParsedToken(ParsedTokenType.Comment, Uint8ViewConcat(views)));
+        return;
+      }
+    }
+
+    // TODO:
+    // parse
+    for (let i = 0; i < line.tokens.length; i++) {
+      const token = line.tokens[i];
+      const tokenType = line.tokens[i].type;
+
+      switch (tokenType) {
+        case TokenType.BackSlash:
+          (() => {
+            const prev = (() => {
+              const t = tokens.pop();
+              if (t && t.type !== ParsedTokenType.String) {
+                // push back into tokens array
+                tokens.push(t);
+                return undefined;
+              }
+              return t;
+            })();
+            const next = (() => {
+              const t = line.tokens[i + 1];
+              if (t && t.type !== TokenType.String) {
+                return undefined;
+              }
+              // skip next token
+              i++;
+              return t;
+            })();
+            if (prev && next) {
+              tokens.push(new ParsedToken(ParsedTokenType.String, Uint8ViewConcat([prev.view, token.view, next.view])));
+            } else if (prev) {
+              tokens.push(new ParsedToken(ParsedTokenType.String, Uint8ViewConcat([prev.view, token.view])));
+            } else if (next) {
+              tokens.push(new ParsedToken(ParsedTokenType.String, Uint8ViewConcat([token.view, next.view])));
+            } else {
+              tokens.push(new ParsedToken(ParsedTokenType.String, token.view));
+            }
+          })();
+          break;
+        case TokenType.DoubleQuote:
+          (() => {
+            const views: Uint8View[] = [];
+            let escaped = false;
+            OUT: for (i++; i < line.tokens.length; i++) {
+              const token = line.tokens[i];
+              const tokenType = line.tokens[i].type;
+              switch (escaped) {
+                case false:
+                  switch (tokenType) {
+                    case TokenType.BackSlash:
+                      escaped = true;
+                      break;
+                    case TokenType.DoubleQuote:
+                      break OUT;
+                    case TokenType.String:
+                    case TokenType.WhiteSpace:
+                      views.push(token.view);
+                      break;
+                  }
+                  break;
+                case true:
+                  escaped = false;
+                  switch (tokenType) {
+                    case TokenType.BackSlash:
+                    case TokenType.DoubleQuote:
+                    case TokenType.String:
+                    case TokenType.WhiteSpace:
+                      views.push(token.view);
+                      break;
+                  }
+                  break;
+              }
+            }
+            tokens.push(new ParsedToken(ParsedTokenType.Quote, Uint8ViewConcat(views)));
+          })();
+          break;
+        case TokenType.String:
+          tokens.push(new ParsedToken(ParsedTokenType.String, token.view));
+          break;
+        case TokenType.WhiteSpace:
+          tokens.push(NOP);
+          break;
+      }
+    }
+  })();
+
+  return new ParsedLine(
+    line.line_number,
+    tokens.filter((token) => token !== NOP),
+  );
 }
 
 export async function Parse(reader: Uint8Reader): Promise<IParsedLine[]> {
   const lines: IParsedLine[] = [];
   await ApplyToLines(reader, async (lineNumber: number, lineBuffer: Uint8Array) => {
-    const parsedLine = ParseLine(TokenizeLine(lineNumber, lineBuffer));
+    const parsedLine = ParseLine(lineNumber, lineBuffer);
     if (parsedLine.tokens.length > 0) {
       lines.push(parsedLine);
     }

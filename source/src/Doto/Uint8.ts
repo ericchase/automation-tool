@@ -10,6 +10,7 @@ export const Uint8Type = {
   CR: 0x0d,          // carriage return
   Space: 0x20,       // space
   DoubleQuote: 0x22, // double quote
+  Slash: 0x2f,       // slash
   Backslash: 0x5c,   // backslash
 };
 
@@ -123,6 +124,22 @@ export class Uint8View implements IUint8View<Uint8Array> {
 export const EmptyUint8Array = new Uint8Array(0);
 export const Uint8ViewEOF = new Uint8View(EmptyUint8Array);
 
+export function Uint8ViewCompare(view1: Uint8View, view2: Uint8View): boolean {
+  if (view1.length !== view2.length) {
+    return false;
+  }
+  let index1 = view1.start;
+  let index2 = view2.start;
+  for (let counter = 0; counter < view1.length; counter++) {
+    if (view1.contents[index1] !== view2.contents[index2]) {
+      return false;
+    }
+    index1++;
+    index2++;
+  }
+  return true;
+}
+
 export function Uint8ViewConcat(viewArray: Uint8View[]): Uint8View {
   let size = 0;
   for (const view of viewArray) {
@@ -163,4 +180,8 @@ export function Uint8ViewToPrintableBytes(view: Uint8View): Uint8Array {
 
 export function Uint8ViewToString(view: Uint8View): string {
   return decode(Uint8ViewToPrintableBytes(view));
+}
+
+export function StringToUint8View(text: string): Uint8View {
+  return new Uint8View(new Uint8Array(encode(text)));
 }
