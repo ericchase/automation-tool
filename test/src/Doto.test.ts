@@ -1,7 +1,2 @@
-import { describe, expect, test } from '@jest/globals';
-
-describe('canary', () => {
-  test('true equals true', () => {
-    expect(true).toBe(true);
-  });
-});
+import { expect, test } from '@jest/globals';
+test('canary', () => expect(true).toBe(true));

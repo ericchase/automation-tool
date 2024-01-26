@@ -1,4 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
+test('canary', () => expect(true).toBe(true));
 
 import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../source/build/Doto/Command/Command.js';
 import { CommandError, PrettyFormatCommandError } from '../../../../source/build/Doto/Command/CommandError.js';

@@ -1,4 +1,5 @@
 import { describe, expect, jest, test } from '@jest/globals';
+test('canary', () => expect(true).toBe(true));
 
 import { Command, CommandType, CommandTypeToString, ICommand } from '../../../../source/build/Doto/Command/Command.js';
 import { Process } from '../../../../source/build/Doto/Command/Process.js';
